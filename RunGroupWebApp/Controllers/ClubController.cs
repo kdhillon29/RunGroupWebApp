@@ -1,27 +1,46 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RunGroupWebApp.Data;
+using RunGroupWebApp.Interfaces;
+using RunGroupWebApp.Models;
 
 namespace RunGroupWebApp.Controllers
 {
     public class ClubController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        
+        private readonly IClubRepository _clubRepository;
 
-        public ClubController(ApplicationDbContext context)
+        public ClubController(IClubRepository clubRepository )
         {
-            _context = context;
+            
+            _clubRepository = clubRepository;
         }
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var clubs = _context.Clubs.ToList();
+            var clubs = await _clubRepository.GetAll();
             return View(clubs);
         }
-        public IActionResult Detail(int id)
+        public async Task<IActionResult> Detail(int id)
         {
-            var club = _context.Clubs.Include(a=>a.Address).FirstOrDefault(c => c.Id == id);
+            var club = await _clubRepository.GetByIdAsync(id);
             return View(club);
 
+        }
+        public IActionResult Create()
+        {
+            return View();
+
+        }
+        [HttpPost]
+        public async Task<IActionResult> Create(Club club)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(club);
+            }
+              _clubRepository.Add(club);
+            return RedirectToAction("Index");
         }
     }
 }
